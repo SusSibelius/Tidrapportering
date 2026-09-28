@@ -3,7 +3,14 @@ import type { JWT } from "next-auth/jwt";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { GRAPH_SCOPES } from "./src/sources/m365";
 
-const tenant = process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT ?? "organizations";
+/** Katalogen som alla privata Microsoft-konton (outlook.com, hotmail.com, live.se) hör till. */
+const PERSONAL_ACCOUNTS_TENANT = "9188040d-6c67-4c5b-b112-36a304b66dad";
+
+// Inloggningen kontrollerar att token kommer från exakt den katalog som anges här, så det
+// måste vara ett katalog-ID (jobbkonton) eller "consumers" (privata konton). "common" och
+// "organizations" fungerar inte, eftersom token då kommer från en annan katalog än den angivna.
+const configuredTenant = process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT;
+const tenant = configuredTenant === "consumers" ? PERSONAL_ACCOUNTS_TENANT : configuredTenant;
 const scope = ["openid", "profile", "email", "offline_access", ...GRAPH_SCOPES].join(" ");
 
 /** Hämtar en ny åtkomsttoken för Graph när den gamla har gått ut. */
@@ -30,7 +37,7 @@ async function refresh(token: JWT): Promise<JWT> {
 }
 
 export const microsoftConfigured = Boolean(
-  process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+  tenant && process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
 );
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
