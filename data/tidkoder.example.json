@@ -1,0 +1,12 @@
+{
+  "timmarPerDag": 8,
+  "tidszon": "Europe/Stockholm",
+  "egenDoman": "konsultbolaget.se",
+  "tidkoder": [
+    { "kod": "KUNDAB-INT", "namn": "Kund AB, integrationsprojekt", "kund": "Kund AB", "debiterbar": true, "domaner": ["kundab.se"], "nyckelord": ["kund ab"] },
+    { "kod": "BANKEN-ARK", "namn": "Banken, arkitekturstöd", "kund": "Banken", "debiterbar": true, "domaner": ["banken.se"], "nyckelord": ["banken"] },
+    { "kod": "INT-MOTE", "namn": "Interna möten", "debiterbar": false, "nyckelord": ["veckomöte", "avdelningsmöte", "1:1"] },
+    { "kod": "INT-KOMP", "namn": "Kompetensutveckling", "debiterbar": false, "nyckelord": ["frukostseminarium", "utbildning", "kurs"] },
+    { "kod": "SALJ", "namn": "Sälj och anbud", "debiterbar": false, "nyckelord": ["anbud", "offert"] }
+  ]
+}

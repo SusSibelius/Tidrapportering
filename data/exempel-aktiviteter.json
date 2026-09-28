@@ -1,0 +1,27 @@
+[
+  { "kalla": "kalender", "datum": "2026-09-14", "minuter": 60, "titel": "Veckomöte konsultgruppen", "personer": ["chef@konsultbolaget.se"] },
+  { "kalla": "kalender", "datum": "2026-09-14", "minuter": 90, "titel": "Sprintplanering integration", "personer": ["po@kundab.se", "dev@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "mail-skickat", "datum": "2026-09-14", "titel": "Re: Felhantering i order-API:t", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"], "utdrag": "Jag har tittat på retry-logiken och föreslår att vi..." },
+  { "kalla": "mail-skickat", "datum": "2026-09-14", "titel": "Mappning av kundnummer", "personer": ["po@kundab.se"], "domaner": ["kundab.se"], "utdrag": "Här är ett förslag på mappningstabell för kundnummer mellan systemen." },
+  { "kalla": "mail-mottaget", "datum": "2026-09-14", "titel": "Frågor inför arkitekturgranskning", "personer": ["arkitekt@banken.se"], "domaner": ["banken.se"], "utdrag": "Kan du titta på bifogat underlag innan onsdag?" },
+
+  { "kalla": "kalender", "datum": "2026-09-15", "minuter": 30, "titel": "Daily standup", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "mail-skickat", "datum": "2026-09-15", "titel": "PR: ny retry-policy för order-API", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"], "utdrag": "Nu är PR:en uppe med exponentiell backoff och tester." },
+  { "kalla": "mail-skickat", "datum": "2026-09-15", "titel": "Re: Frågor inför arkitekturgranskning", "personer": ["arkitekt@banken.se"], "domaner": ["banken.se"], "utdrag": "Jag har gått igenom underlaget och har några kommentarer om lagerindelningen..." },
+  { "kalla": "mail-mottaget", "datum": "2026-09-15", "titel": "Testmiljön är nere", "personer": ["drift@kundab.se"], "domaner": ["kundab.se"] },
+
+  { "kalla": "kalender", "datum": "2026-09-16", "minuter": 30, "titel": "Daily standup", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "kalender", "datum": "2026-09-16", "minuter": 180, "titel": "Arkitekturgranskning betalflöden", "personer": ["arkitekt@banken.se", "cto@banken.se"], "domaner": ["banken.se"] },
+  { "kalla": "mail-skickat", "datum": "2026-09-16", "titel": "Anteckningar från granskningen", "personer": ["arkitekt@banken.se"], "domaner": ["banken.se"], "utdrag": "Sammanfattning av granskningen och åtgärdsförslag." },
+  { "kalla": "mail-skickat", "datum": "2026-09-16", "titel": "Underlag till anbud för Energibolaget", "personer": ["salj@konsultbolaget.se"], "utdrag": "Här är min del av lösningsbeskrivningen till anbudet." },
+
+  { "kalla": "kalender", "datum": "2026-09-17", "minuter": 30, "titel": "Daily standup", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "kalender", "datum": "2026-09-17", "minuter": 60, "titel": "Frukostseminarium: event-driven arkitektur", "personer": ["alla@konsultbolaget.se"] },
+  { "kalla": "mail-skickat", "datum": "2026-09-17", "titel": "Re: PR: ny retry-policy för order-API", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"], "utdrag": "Fixat kommentarerna, redo för ny granskning." },
+  { "kalla": "mail-skickat", "datum": "2026-09-17", "titel": "Deploy till test", "personer": ["drift@kundab.se"], "domaner": ["kundab.se"], "utdrag": "Kan ni deploya version 1.4 till testmiljön?" },
+
+  { "kalla": "kalender", "datum": "2026-09-18", "minuter": 30, "titel": "Daily standup", "personer": ["dev@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "kalender", "datum": "2026-09-18", "minuter": 60, "titel": "Sprintdemo", "personer": ["po@kundab.se"], "domaner": ["kundab.se"] },
+  { "kalla": "kalender", "datum": "2026-09-18", "minuter": 30, "titel": "1:1 med chef", "personer": ["chef@konsultbolaget.se"] },
+  { "kalla": "mail-skickat", "datum": "2026-09-18", "titel": "Uppföljning arkitekturåtgärder", "personer": ["arkitekt@banken.se"], "domaner": ["banken.se"], "utdrag": "Här är status på åtgärderna från onsdagens granskning." }
+]
