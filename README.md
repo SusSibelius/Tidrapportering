@@ -59,11 +59,16 @@ Kopiera `data/tidkoder.example.json` till `data/tidkoder.json` (som inte checkas
 
 Registrera en app i [Microsoft Entra ID](https://entra.microsoft.com) under *App registrations*. Under *API permissions* lägger du till de delegerade behörigheterna `Calendars.Read` och `Mail.Read` från Microsoft Graph.
 
+Vilket konto ska logga in?
+
+- **Jobbkonto** (företagets Microsoft 365): registrera appen i företagets katalog och välj *Accounts in this organizational directory only*. Sätt `AUTH_MICROSOFT_ENTRA_ID_TENANT` till katalogens ID. Kan du inte registrera appar själv behöver en administratör göra det.
+- **Privat konto** (outlook.com, hotmail.com, live.se): ett privat konto har ingen egen katalog. Skapa ett gratis Azure-konto på [portal.azure.com](https://portal.azure.com), så skapas en katalog, och registrera appen där. Välj *Personal Microsoft accounts only* och sätt `AUTH_MICROSOFT_ENTRA_ID_TENANT=consumers`.
+
 **För webbappen:**
 
 1. Under *Authentication*: lägg till plattformen *Web* med omdirigerings-URI `http://localhost:3000/api/auth/callback/microsoft-entra-id` (och sajtens riktiga adress när den finns).
 2. Under *Certificates & secrets*: skapa en klienthemlighet.
-3. Fyll i `.env.local`: `AUTH_MICROSOFT_ENTRA_ID_ID` (Application ID), `AUTH_MICROSOFT_ENTRA_ID_SECRET` (hemligheten), `AUTH_MICROSOFT_ENTRA_ID_TENANT` (Directory ID) och `AUTH_SECRET` (kör `npx auth secret`).
+3. Fyll i `.env.local`: `AUTH_MICROSOFT_ENTRA_ID_ID` (Application ID), `AUTH_MICROSOFT_ENTRA_ID_SECRET` (hemligheten), `AUTH_MICROSOFT_ENTRA_ID_TENANT` (katalogens ID eller `consumers`, se ovan) och `AUTH_SECRET` (kör `npx auth secret`).
 
 **För kommandoraden:**
 
