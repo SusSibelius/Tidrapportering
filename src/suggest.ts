@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import type { BaselineRow } from "./baseline.js";
-import { SuggestionSchema, type Activity, type Config, type Suggestion, type SuggestionRow } from "./types.js";
-import { weekdayName } from "./week.js";
+import type { BaselineRow } from "./baseline";
+import { SuggestionSchema, type Activity, type Config, type Suggestion, type SuggestionRow } from "./types";
+import { weekdayName } from "./week";
 
 export const MODEL = "claude-opus-5";
 
@@ -90,14 +90,20 @@ export function suggestWithRules(days: string[], activities: Activity[], config:
     const hours = new Map(meetingHours);
     for (const [kod, n] of mailCount) hours.set(kod, (hours.get(kod) ?? 0) + (rest * n) / mailTotal);
     for (const [kod, h] of hours) {
+      const mails = today.filter((a) => a.regelkod === kod && a.kalla !== "kalender").length;
+      const meetings = meetingHours.get(kod);
+      const parts = [
+        meetings && `${String(meetings).replace(".", ",")} h möten`,
+        mails && `${mails} mail`,
+      ].filter(Boolean);
       rows.push({
         datum: day,
         kod,
         timmar: h,
-        motivering: `${(meetingHours.get(kod) ?? 0).toFixed(1)} h möten, ${mailCount.get(kod) ?? 0} mailpoäng`,
-        sakerhet: meetingHours.has(kod) ? "medel" : "lag",
+        motivering: `${parts.join(" och ")} som hör till koden.`.replace(/^./, (c) => c.toUpperCase()),
+        sakerhet: meetings ? "medel" : "lag",
       });
     }
   }
-  return { rader: rows, kommentar: "Regelbaserat förslag utan AI." };
+  return { rader: rows, kommentar: "Möten har fått sin tid och resten av varje dag är fördelad efter mailen. Förslaget bygger bara på regler, så kontrollera de osäkra raderna." };
 }

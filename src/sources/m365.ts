@@ -1,52 +1,10 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { PublicClientApplication, type ICachePlugin } from "@azure/msal-node";
-import { externalDomains } from "../rules.js";
-import type { Activity } from "../types.js";
-import { localDate } from "../week.js";
+import { externalDomains } from "../rules";
+import type { Activity } from "../types";
+import { localDate } from "../week";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
-const SCOPES = ["Calendars.Read", "Mail.Read"];
-const TOKEN_CACHE = ".token-cache.json";
+export const GRAPH_SCOPES = ["Calendars.Read", "Mail.Read"];
 const EXCERPT_LENGTH = 200;
-
-/** Sparar inloggningen lokalt så att enhetskoden bara behövs första gången. */
-const cachePlugin: ICachePlugin = {
-  async beforeCacheAccess(ctx) {
-    try {
-      ctx.tokenCache.deserialize(await readFile(TOKEN_CACHE, "utf8"));
-    } catch {
-      // Ingen cache än.
-    }
-  },
-  async afterCacheAccess(ctx) {
-    if (ctx.cacheHasChanged) await writeFile(TOKEN_CACHE, ctx.tokenCache.serialize(), { mode: 0o600 });
-  },
-};
-
-async function getToken(): Promise<string> {
-  const clientId = process.env.MS_CLIENT_ID;
-  if (!clientId) throw new Error("MS_CLIENT_ID saknas, se README för hur appen registreras i Entra ID");
-  const tenant = process.env.MS_TENANT_ID ?? "organizations";
-  const app = new PublicClientApplication({
-    auth: { clientId, authority: `https://login.microsoftonline.com/${tenant}` },
-    cache: { cachePlugin },
-  });
-
-  const [account] = await app.getTokenCache().getAllAccounts();
-  if (account) {
-    try {
-      return (await app.acquireTokenSilent({ account, scopes: SCOPES })).accessToken;
-    } catch {
-      // Faller tillbaka på enhetskod nedan.
-    }
-  }
-  const result = await app.acquireTokenByDeviceCode({
-    scopes: SCOPES,
-    deviceCodeCallback: (r) => console.error(r.message),
-  });
-  if (!result) throw new Error("Inloggningen mot Microsoft 365 avbröts");
-  return result.accessToken;
-}
 
 /** Hämtar alla sidor för en Graph-fråga. */
 async function getAll<T>(token: string, url: string, timeZone: string): Promise<T[]> {
@@ -98,8 +56,12 @@ function minutesBetween(start: string, end: string): number {
  * Hämtar veckans kalender och mail. Bara metadata och ett kort utdrag sparas,
  * aldrig hela mailkroppar.
  */
-export async function loadM365Activities(days: string[], timeZone: string, ownDomain?: string): Promise<Activity[]> {
-  const token = await getToken();
+export async function loadM365Activities(
+  token: string,
+  days: string[],
+  timeZone: string,
+  ownDomain?: string,
+): Promise<Activity[]> {
   const from = `${days[0]}T00:00:00`;
   const to = `${days[days.length - 1]}T23:59:59`;
   // Mail filtreras i UTC, så vi tar med marginal och sorterar bort andra dagar efteråt.

@@ -1,4 +1,4 @@
-import type { SuggestionRow, TimeCode } from "./types.js";
+import type { SuggestionRow, TimeCode } from "./types";
 
 export function roundToHalf(h: number): number {
   return Math.round(h * 2) / 2;

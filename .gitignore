@@ -1,6 +1,11 @@
 node_modules/
 .env
+!.env.example
 .token-cache.json
 data/tidkoder.json
 data/*.privat.*
 forslag*.csv
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.env*.local

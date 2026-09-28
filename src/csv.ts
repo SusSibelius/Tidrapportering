@@ -1,4 +1,4 @@
-import type { SuggestionRow, TimeEntry } from "./types.js";
+import type { SuggestionRow, TimeEntry } from "./types";
 
 const SEP = ";";
 

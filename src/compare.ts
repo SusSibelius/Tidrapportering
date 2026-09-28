@@ -1,4 +1,4 @@
-import type { TimeEntry } from "./types.js";
+import type { TimeEntry } from "./types";
 
 export interface Comparison {
   forslagTimmar: number;

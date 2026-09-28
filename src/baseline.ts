@@ -1,5 +1,5 @@
-import type { TimeEntry } from "./types.js";
-import { isoWeekOf, weekdayName } from "./week.js";
+import type { TimeEntry } from "./types";
+import { isoWeekOf, weekdayName } from "./week";
 
 export interface BaselineRow {
   veckodag: string;

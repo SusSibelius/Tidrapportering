@@ -1,15 +1,14 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { baseline } from "./baseline.js";
-import { compare } from "./compare.js";
-import { parseEntries, toCsv } from "./csv.js";
-import { normalize } from "./normalize.js";
-import { applyRules } from "./rules.js";
-import { loadM365Activities } from "./sources/m365.js";
-import { loadSampleActivities } from "./sources/sample.js";
-import { suggestWithClaude, suggestWithRules } from "./suggest.js";
-import { ConfigSchema } from "./types.js";
-import { previousWeek, workdays } from "./week.js";
+import { baseline } from "./baseline";
+import { compare } from "./compare";
+import { parseEntries, toCsv } from "./csv";
+import { readConfig } from "./config";
+import { suggestWeek } from "./engine";
+import { loadM365Activities } from "./sources/m365";
+import { getCliToken } from "./sources/m365-cli-auth";
+import { loadSampleActivities } from "./sources/sample";
+import { previousWeek, workdays } from "./week";
 
 const HELP = `Föreslår en tidrapport för en vecka.
 
@@ -24,18 +23,6 @@ Användning: npm run forslag -- [flaggor]
   --ut <fil>             Skriv förslaget som CSV
   --utan-ai              Bara regler, inget anrop till Claude
   --help                 Visa den här texten`;
-
-async function readConfig(path?: string) {
-  const candidates = path ? [path] : ["data/tidkoder.json", "data/tidkoder.example.json"];
-  for (const p of candidates) {
-    try {
-      return ConfigSchema.parse(JSON.parse(await readFile(p, "utf8")));
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
-    }
-  }
-  throw new Error(`Hittade ingen konfiguration (${candidates.join(", ")})`);
-}
 
 async function main() {
   const { values: args } = parseArgs({
@@ -59,20 +46,14 @@ async function main() {
 
   const raw =
     args.kalla === "m365"
-      ? await loadM365Activities(days, config.tidszon, config.egenDoman)
+      ? await loadM365Activities(await getCliToken(), days, config.tidszon, config.egenDoman)
       : await loadSampleActivities(args.aktiviteter!, days);
-  const activities = applyRules(raw, config.tidkoder);
-  const matched = activities.filter((a) => a.regelkod).length;
-  console.log(`Vecka ${week}: ${activities.length} aktiviteter, ${matched} matchade en regel.`);
-
   const history = args.historik ? baseline(parseEntries(await readFile(args.historik, "utf8"))) : [];
+  const { rader, varningar, kommentar, aktiviteter } = await suggestWeek(days, raw, config, history, !args["utan-ai"]);
+  const matched = aktiviteter.filter((a) => a.regelkod).length;
+  console.log(`Vecka ${week}: ${aktiviteter.length} aktiviteter, ${matched} matchade en regel.`);
 
-  const suggestion = args["utan-ai"]
-    ? suggestWithRules(days, activities, config)
-    : await suggestWithClaude(days, activities, config, history);
-  const { rader, varningar } = normalize(suggestion.rader, days, config.tidkoder, config.timmarPerDag);
-
-  console.log(`\n${suggestion.kommentar}\n`);
+  console.log(`\n${kommentar}\n`);
   console.table(rader.map((r) => ({ datum: r.datum, kod: r.kod, timmar: r.timmar, säkerhet: r.sakerhet, motivering: r.motivering })));
   for (const v of varningar) console.warn(`Varning: ${v}`);
 
