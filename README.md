@@ -1,12 +1,35 @@
 # Tidrapportering
 
-Föreslår veckans tidrapport utifrån det du faktiskt gjort: kalendermöten, mail och hur du brukar rapportera. Du granskar förslaget och får ut en CSV att föra in i xLedger.
+Föreslår veckans tidrapport utifrån det du faktiskt gjort: kalendermöten, mail och hur du brukar rapportera. Du granskar förslaget i en veckovy, justerar och godkänner, och får ut ett underlag att föra in i xLedger.
 
-Det här är prototypen (fas 1 i startplanen). Den kör från kommandoraden och är till för att testa hur bra förslagen blir innan vi bygger ett gränssnitt.
+Projektet består av två delar som delar samma förslagsmotor (`src/`):
 
-## Kom igång
+- **Webbappen** (`app/`), byggd med Next.js. Du loggar in med ditt Microsoft-konto och ser veckans förslag.
+- **Kommandoraden** (`npm run forslag`), för att snabbt testa och mäta förslagen mot gamla veckor.
 
 Kräver Node 22 eller senare.
+
+## Webbappen
+
+```bash
+npm install
+npm run dev
+```
+
+Öppna http://localhost:3000. Utan inloggning visas exempelveckan. För att använda din egen kalender och mail kopierar du `.env.example` till `.env.local` och fyller i värdena (se *Koppla in Microsoft 365* nedan).
+
+Godkända veckor sparas än så länge bara i webbläsaren. En databas kommer i nästa steg.
+
+### Lägga ut sajten på Vercel
+
+1. Logga in på [vercel.com](https://vercel.com) med ditt GitHub-konto och välj *Add New → Project*.
+2. Importera repot `tidrapportering`. Vercel känner igen Next.js själv.
+3. Lägg in miljövariablerna från `.env.example` under *Environment Variables*.
+4. Lägg till sajtens adress som omdirigerings-URI i Entra ID-appen: `https://<din-adress>/api/auth/callback/microsoft-entra-id`.
+
+Utan miljövariabler fungerar sajten ändå, men visar bara exempeldata.
+
+## Kommandoraden
 
 ```bash
 npm install
@@ -34,10 +57,18 @@ Kopiera `data/tidkoder.example.json` till `data/tidkoder.json` (som inte checkas
 
 ## Koppla in Microsoft 365
 
-1. Registrera en app i [Microsoft Entra ID](https://entra.microsoft.com) under *App registrations*.
-2. Under *Authentication*: lägg till plattformen *Mobile and desktop applications* och slå på *Allow public client flows*.
-3. Under *API permissions*: lägg till de delegerade behörigheterna `Calendars.Read` och `Mail.Read` från Microsoft Graph.
-4. Kör:
+Registrera en app i [Microsoft Entra ID](https://entra.microsoft.com) under *App registrations*. Under *API permissions* lägger du till de delegerade behörigheterna `Calendars.Read` och `Mail.Read` från Microsoft Graph.
+
+**För webbappen:**
+
+1. Under *Authentication*: lägg till plattformen *Web* med omdirigerings-URI `http://localhost:3000/api/auth/callback/microsoft-entra-id` (och sajtens riktiga adress när den finns).
+2. Under *Certificates & secrets*: skapa en klienthemlighet.
+3. Fyll i `.env.local`: `AUTH_MICROSOFT_ENTRA_ID_ID` (Application ID), `AUTH_MICROSOFT_ENTRA_ID_SECRET` (hemligheten), `AUTH_MICROSOFT_ENTRA_ID_TENANT` (Directory ID) och `AUTH_SECRET` (kör `npx auth secret`).
+
+**För kommandoraden:**
+
+1. Under *Authentication*: lägg till plattformen *Mobile and desktop applications* och slå på *Allow public client flows*.
+2. Kör:
 
 ```bash
 export MS_CLIENT_ID=<Application (client) ID>
@@ -57,6 +88,8 @@ Exportera några veckors riktiga tidrapporter som CSV (`datum;kod;timmar`) och k
 
 | Kommando | Vad det gör |
 |---|---|
-| `npm run forslag -- --help` | Alla flaggor |
+| `npm run dev` | Startar webbappen lokalt |
+| `npm run build` | Bygger webbappen |
+| `npm run forslag -- --help` | Alla flaggor för kommandoraden |
 | `npm test` | Enhetstester |
 | `npm run typecheck` | Typkontroll |

@@ -1,4 +1,4 @@
-import type { Activity, TimeCode } from "./types.js";
+import type { Activity, TimeCode } from "./types";
 
 /**
  * Enkla, förutsägbara mappningar: maildomän eller nyckelord → tidkod.

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { baseline } from "../src/baseline.js";
-import { compare } from "../src/compare.js";
-import { parseEntries, toCsv } from "../src/csv.js";
-import { normalize, roundToHalf } from "../src/normalize.js";
-import { applyRules, externalDomains } from "../src/rules.js";
-import { suggestWithRules } from "../src/suggest.js";
-import { ConfigSchema, type Activity } from "../src/types.js";
-import { isoWeekOf, localDate, workdays } from "../src/week.js";
+import { baseline } from "../src/baseline";
+import { compare } from "../src/compare";
+import { parseEntries, toCsv } from "../src/csv";
+import { normalize, roundToHalf } from "../src/normalize";
+import { applyRules, externalDomains } from "../src/rules";
+import { suggestWithRules } from "../src/suggest";
+import { ConfigSchema, type Activity } from "../src/types";
+import { isoWeekOf, localDate, workdays } from "../src/week";
 
 const config = ConfigSchema.parse({
   timmarPerDag: 8,
