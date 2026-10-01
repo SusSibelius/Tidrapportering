@@ -14,7 +14,7 @@ const tenant = configuredTenant === "consumers" ? PERSONAL_ACCOUNTS_TENANT : con
 const scope = ["openid", "profile", "email", "offline_access", ...GRAPH_SCOPES].join(" ");
 
 /** Hämtar en ny åtkomsttoken för Graph när den gamla har gått ut. */
-async function refresh(token: JWT): Promise<JWT> {
+export async function refreshGraphToken(token: JWT): Promise<JWT> {
   const res = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
     method: "POST",
     body: new URLSearchParams({
@@ -61,7 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       }
       if (typeof token.expiresAt === "number" && Date.now() / 1000 > token.expiresAt - 60 && token.refreshToken) {
-        return refresh(token);
+        return refreshGraphToken(token);
       }
       return token;
     },

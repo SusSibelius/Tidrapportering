@@ -14,6 +14,7 @@ async function getAll<T>(token: string, url: string, timeZone: string): Promise<
     const res = await fetch(next, {
       headers: { Authorization: `Bearer ${token}`, Prefer: `outlook.timezone="${timeZone}"` },
     });
+    if (res.status === 401) throw new Error("Microsoft godkände inte inloggningen. Logga ut och logga in igen.");
     if (!res.ok) throw new Error(`Graph svarade ${res.status}: ${await res.text()}`);
     const body = (await res.json()) as { value: T[]; "@odata.nextLink"?: string };
     items.push(...body.value);

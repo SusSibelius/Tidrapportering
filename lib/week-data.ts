@@ -13,9 +13,10 @@ export const DEMO_WEEK = "2026-W38";
 
 /** Utan inloggning visas exempeldata. */
 export async function isDemo(): Promise<boolean> {
-  if (!microsoftConfigured || !(await auth())) return true;
-  return !(await graphToken());
+  return !microsoftConfigured || !(await auth());
 }
+
+const EXPIRED = "Inloggningen mot Microsoft har gått ut. Logga ut och logga in igen.";
 
 async function readHistory(path: string) {
   try {
@@ -29,6 +30,7 @@ async function readHistory(path: string) {
 export async function loadWeek(days: string[], demo: boolean) {
   const config = await readConfig();
   const token = demo ? undefined : await graphToken();
+  if (!demo && !token) throw new Error(EXPIRED);
   const raw = token
     ? await loadM365Activities(token, days, config.tidszon, config.egenDoman)
     : await loadSampleActivities("data/exempel-aktiviteter.json", days);
