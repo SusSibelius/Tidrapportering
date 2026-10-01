@@ -1,5 +1,5 @@
 {
-  "timmarPerDag": 8,
+  "timmarPerDag": 7.7,
   "tidszon": "Europe/Stockholm",
   "egenDoman": "konsultbolaget.se",
   "tidkoder": [
@@ -7,6 +7,8 @@
     { "kod": "BANKEN-ARK", "namn": "Banken, arkitekturstöd", "kund": "Banken", "debiterbar": true, "domaner": ["banken.se"], "nyckelord": ["banken"] },
     { "kod": "INT-MOTE", "namn": "Interna möten", "debiterbar": false, "nyckelord": ["veckomöte", "avdelningsmöte", "1:1"] },
     { "kod": "INT-KOMP", "namn": "Kompetensutveckling", "debiterbar": false, "nyckelord": ["frukostseminarium", "utbildning", "kurs"] },
-    { "kod": "SALJ", "namn": "Sälj och anbud", "debiterbar": false, "nyckelord": ["anbud", "offert"] }
+    { "kod": "SALJ", "namn": "Sälj och anbud", "debiterbar": false, "nyckelord": ["anbud", "offert"] },
+    { "kod": "SEMESTER", "namn": "Semester", "debiterbar": false, "typ": "franvaro" },
+    { "kod": "FLEX", "namn": "Flexledig, uttag av flextid", "debiterbar": false, "typ": "flexuttag" }
   ]
 }

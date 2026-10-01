@@ -10,11 +10,16 @@ export const TimeCodeSchema = z.object({
   domaner: z.array(z.string()).default([]),
   /** Ord i mötestitlar/ämnesrader som pekar på den här koden. */
   nyckelord: z.array(z.string()).default([]),
+  /**
+   * Hur koden påverkar flexsaldot. "arbete" och "franvaro" (t.ex. semester) räknas mot
+   * dagens arbetstid, "flexuttag" gör det inte och minskar alltså saldot.
+   */
+  typ: z.enum(["arbete", "franvaro", "flexuttag"]).default("arbete"),
 });
 export type TimeCode = z.infer<typeof TimeCodeSchema>;
 
 export const ConfigSchema = z.object({
-  timmarPerDag: z.number().default(8),
+  timmarPerDag: z.number().default(7.7),
   tidszon: z.string().default("Europe/Stockholm"),
   egenDoman: z.string().optional(),
   tidkoder: z.array(TimeCodeSchema).min(1),
@@ -46,7 +51,7 @@ export const SuggestionSchema = z.object({
     z.object({
       datum: z.string().describe("YYYY-MM-DD, en av veckans arbetsdagar"),
       kod: z.string().describe("Exakt en av de givna tidkoderna"),
-      timmar: z.number().describe("Timmar, i halvtimmar"),
+      timmar: z.number().describe("Timmar, med högst en decimal"),
       motivering: z.string().describe("Kort motivering på svenska"),
       sakerhet: Confidence,
     }),

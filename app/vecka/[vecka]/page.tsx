@@ -44,7 +44,7 @@ export default async function WeekPage({ params }: { params: Promise<{ vecka: st
         key={vecka}
         week={vecka}
         days={days}
-        codes={config.tidkoder.map(({ kod, namn, debiterbar }) => ({ kod, namn, debiterbar }))}
+        codes={config.tidkoder.map(({ kod, namn, debiterbar, typ }) => ({ kod, namn, debiterbar, typ }))}
         hoursPerDay={config.timmarPerDag}
         suggestion={suggestion}
       />

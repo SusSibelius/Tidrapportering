@@ -20,6 +20,18 @@ npm run dev
 
 Godkända veckor sparas än så länge bara i webbläsaren. En databas kommer i nästa steg.
 
+### Flexsaldo
+
+En arbetsdag är 7,7 timmar (`timmarPerDag` i `tidkoder.json`). Rapporterar du mer en dag blir det plus i flexsaldot, mindre blir minus. Fliken *Flex* visar saldot totalt och för dagen, veckan, månaden och året, och räknar bara godkända veckor. Där kan du också fylla i ett ingående saldo, till exempel från xLedger.
+
+Varje tidkod har en `typ` som styr hur den räknas:
+
+| Typ | Exempel | Räknas mot arbetstiden |
+|---|---|---|
+| `arbete` (standard) | kundprojekt, interna möten | Ja |
+| `franvaro` | semester | Ja, så en semesterdag ger varken plus eller minus |
+| `flexuttag` | flexledig | Nej, så timmarna dras från saldot |
+
 ### Lägga ut sajten på Vercel
 
 1. Logga in på [vercel.com](https://vercel.com) med ditt GitHub-konto och välj *Add New → Project*.
@@ -49,11 +61,11 @@ npm run forslag -- --historik data/exempel-historik.csv --facit data/exempel-fac
 2. **Regler** i `tidkoder.json` kopplar maildomäner och nyckelord till tidkoder, t.ex. `kundab.se` → `KUNDAB-INT`.
 3. **Historik** från tidigare veckor blir ett snitt per veckodag och tidkod.
 4. **Claude** (`claude-opus-5`) får allt ovan och föreslår timmar per dag och tidkod, med motivering och säkerhet per rad. Med `--utan-ai` görs i stället en enkel regelbaserad fördelning, som är bra att jämföra mot.
-5. **Normalisering** tar bort okända koder, avrundar till halvtimmar och varnar när en dag inte går ihop.
+5. **Normalisering** tar bort okända koder, avrundar till tiondels timmar och varnar när en dag inte går ihop.
 
 ## Egna tidkoder
 
-Kopiera `data/tidkoder.example.json` till `data/tidkoder.json` (som inte checkas in) och fyll i dina egna kunder, koder, domäner och nyckelord.
+Kopiera `data/tidkoder.example.json` till `data/tidkoder.json` (som inte checkas in) och fyll i dina egna kunder, koder, domäner och nyckelord. Koder med typen `franvaro` eller `flexuttag` föreslås aldrig automatiskt, dem fyller du i själv.
 
 ## Koppla in Microsoft 365
 

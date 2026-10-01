@@ -15,7 +15,7 @@ Så här resonerar du:
 - Mail visar vad konsulten jobbat med mellan mötena. Skickade mail väger tyngre än mottagna. Fördela dagens resterande tid efter vilka kunder och projekt mailen handlar om.
 - En regelkod på en aktivitet är en säker koppling som konsulten själv har satt upp. Följ den.
 - Historiken visar konsultens normala vecka. Använd den när aktiviteterna inte räcker, till exempel för återkommande intern tid.
-- Varje dag ska summera till konsultens arbetstid per dag, i halvtimmar.
+- Varje dag ska summera till konsultens arbetstid per dag. Ange timmar med högst en decimal.
 - Använd bara de givna tidkoderna. Hitta aldrig på en kod.
 - Motivera varje rad kort på svenska med vad den bygger på, till exempel "2 möten med Kund AB, 5 skickade mail om integrationen".
 - Sätt säkerheten till "lag" när en rad mest bygger på gissning eller historik.`;
@@ -43,7 +43,10 @@ export async function suggestWithClaude(
   const input = {
     arbetsdagar: days.map((d) => ({ datum: d, veckodag: weekdayName(d) })),
     timmarPerDag: config.timmarPerDag,
-    tidkoder: config.tidkoder.map(({ kod, namn, kund, debiterbar }) => ({ kod, namn, kund, debiterbar })),
+    // Flexuttag och frånvaro sätter konsulten själv, de går inte att utläsa ur kalender och mail.
+    tidkoder: config.tidkoder
+      .filter((c) => c.typ === "arbete")
+      .map(({ kod, namn, kund, debiterbar }) => ({ kod, namn, kund, debiterbar })),
     historik: history,
     aktiviteter: compactActivities(activities),
   };
