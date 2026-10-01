@@ -1,15 +1,18 @@
 import type { SuggestionRow, TimeCode } from "./types";
 
-export function roundToHalf(h: number): number {
-  return Math.round(h * 2) / 2;
+const hoursText = (h: number) => String(h).replace(".", ",");
+
+/** Timmar rapporteras i tiondelar (6 minuter), så att en dag på 7,7 timmar går ihop. */
+export function roundToTenth(h: number): number {
+  return Math.round(h * 10) / 10;
 }
 
 /**
- * Avrundar en dags rader till halvtimmar utan att dagens summa glider:
- * summan avrundas en gång och halvtimmarna fördelas efter största rest.
+ * Avrundar en dags rader till tiondelar utan att dagens summa glider:
+ * summan avrundas en gång och tiondelarna fördelas efter största rest.
  */
 function roundDay(rows: SuggestionRow[]): SuggestionRow[] {
-  const units = rows.map((r) => r.timmar * 2);
+  const units = rows.map((r) => r.timmar * 10);
   const floors = units.map(Math.floor);
   let left = Math.round(units.reduce((s, u) => s + u, 0)) - floors.reduce((s, u) => s + u, 0);
   const byRemainder = units.map((u, i) => i).sort((a, b) => units[b] - floors[b] - (units[a] - floors[a]));
@@ -18,7 +21,7 @@ function roundDay(rows: SuggestionRow[]): SuggestionRow[] {
     floors[i] += 1;
     left -= 1;
   }
-  return rows.map((r, i) => ({ ...r, timmar: floors[i] / 2 }));
+  return rows.map((r, i) => ({ ...r, timmar: floors[i] / 10 }));
 }
 
 export interface Normalized {
@@ -27,7 +30,7 @@ export interface Normalized {
 }
 
 /**
- * Sista steget efter förslagsmotorn: bara giltiga koder och datum, halvtimmar,
+ * Sista steget efter förslagsmotorn: bara giltiga koder och datum, tiondelar,
  * en rad per dag och kod, och varningar när en dag inte går ihop.
  */
 export function normalize(rows: SuggestionRow[], days: string[], codes: TimeCode[], hoursPerDay: number): Normalized {
@@ -60,8 +63,8 @@ export function normalize(rows: SuggestionRow[], days: string[], codes: TimeCode
     .sort((a, b) => a.datum.localeCompare(b.datum) || a.kod.localeCompare(b.kod));
 
   for (const day of days) {
-    const total = rader.filter((r) => r.datum === day).reduce((s, r) => s + r.timmar, 0);
-    if (total !== hoursPerDay) varningar.push(`${day}: ${total} h rapporterat, förväntat ${hoursPerDay} h`);
+    const total = roundToTenth(rader.filter((r) => r.datum === day).reduce((s, r) => s + r.timmar, 0));
+    if (total !== hoursPerDay) varningar.push(`${day}: ${hoursText(total)} h rapporterat, förväntat ${hoursText(hoursPerDay)} h`);
   }
 
   return { rader, varningar };

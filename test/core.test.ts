@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { baseline } from "../src/baseline";
 import { compare } from "../src/compare";
 import { parseEntries, toCsv } from "../src/csv";
-import { normalize, roundToHalf } from "../src/normalize";
+import { flexDays, flexOverview } from "../src/flex";
+import { normalize, roundToTenth } from "../src/normalize";
 import { applyRules, externalDomains } from "../src/rules";
 import { suggestWithRules } from "../src/suggest";
 import { ConfigSchema, type Activity } from "../src/types";
@@ -60,8 +61,8 @@ describe("regler", () => {
 
 describe("normalisering", () => {
   const days = ["2026-09-14"];
-  it("avrundar till halvtimmar och slår ihop dubbletter", () => {
-    expect(roundToHalf(1.26)).toBe(1.5);
+  it("avrundar till tiondelar och slår ihop dubbletter", () => {
+    expect(roundToTenth(1.26)).toBe(1.3);
     const { rader, varningar } = normalize(
       [
         { datum: "2026-09-14", kod: "KUND", timmar: 3.2, motivering: "a", sakerhet: "hog" },
@@ -89,6 +90,19 @@ describe("normalisering", () => {
       8,
     );
     expect(rader.reduce((s, r) => s + r.timmar, 0)).toBe(8);
+    expect(varningar).toEqual([]);
+  });
+  it("får en dag på 7,7 timmar att gå ihop", () => {
+    const { rader, varningar } = normalize(
+      [
+        { datum: "2026-09-14", kod: "KUND", timmar: 5.13, motivering: "", sakerhet: "hog" },
+        { datum: "2026-09-14", kod: "INTERN", timmar: 2.57, motivering: "", sakerhet: "lag" },
+      ],
+      days,
+      config.tidkoder,
+      7.7,
+    );
+    expect(rader.map((r) => r.timmar)).toEqual([2.6, 5.1]);
     expect(varningar).toEqual([]);
   });
   it("tar bort okända koder och varnar när dagen inte går ihop", () => {
@@ -143,5 +157,52 @@ describe("CSV, historik och jämförelse", () => {
     );
     expect(c.traffsakerhet).toBe(0.75);
     expect(c.avvikelseTimmar).toBe(4);
+  });
+});
+
+describe("flex", () => {
+  const codes = [
+    { kod: "KUND", typ: "arbete" as const },
+    { kod: "SEMESTER", typ: "franvaro" as const },
+    { kod: "FLEX", typ: "flexuttag" as const },
+  ];
+  const week = (w: string, hours: Record<string, number>, approved = true) => ({ week: w, hours, approved });
+
+  it("ger plus och minus mot 7,7 timmar per dag", () => {
+    const days = flexDays(
+      [
+        week("2026-W38", {
+          "KUND|2026-09-14": 9,
+          "KUND|2026-09-15": 7.7,
+          "KUND|2026-09-16": 7,
+          "SEMESTER|2026-09-17": 7.7,
+          "FLEX|2026-09-18": 7.7,
+        }),
+      ],
+      codes,
+      7.7,
+    );
+    expect(days.map((d) => d.flex)).toEqual([1.3, 0, -0.7, 0, -7.7]);
+    expect(days[4].uttag).toBe(7.7);
+  });
+  it("räknar bara godkända veckor", () => {
+    expect(flexDays([week("2026-W38", { "KUND|2026-09-14": 9 }, false)], codes, 7.7)).toEqual([]);
+  });
+  it("summerar per dag, vecka, månad och år med ingående saldo", () => {
+    const days = flexDays(
+      [
+        week("2026-W36", Object.fromEntries(workdays("2026-W36").map((d) => [`KUND|${d}`, 8.7]))),
+        week("2026-W40", Object.fromEntries(workdays("2026-W40").map((d) => [`KUND|${d}`, 7.2]))),
+      ],
+      codes,
+      7.7,
+    );
+    const o = flexOverview(days, "2026-10-01", 3);
+    expect(o.idag.flex).toBe(-0.5);
+    expect(o.vecka.flex).toBe(-2.5);
+    // Vecka 40 börjar 28 september, så bara torsdag och fredag hör till oktober.
+    expect(o.manad).toEqual({ flex: -1, raknat: 14.4, dagar: 2 });
+    expect(o.ar.flex).toBe(2.5);
+    expect(o.saldo).toBe(5.5);
   });
 });

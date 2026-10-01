@@ -1,14 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { WeekSuggestion } from "../../../src/engine";
-import type { SuggestionRow } from "../../../src/types";
+import type { SuggestionRow, TimeCode } from "../../../src/types";
+import { flexClass, fmtFlex, fmtHours as fmt, tenth } from "../../../lib/hours";
+import { loadWeek, saveWeek } from "../../../lib/saved-weeks";
 
-interface Code {
-  kod: string;
-  namn: string;
-  debiterbar: boolean;
-}
+type Code = Pick<TimeCode, "kod" | "namn" | "debiterbar" | "typ">;
 
 interface Props {
   week: string;
@@ -20,31 +19,13 @@ interface Props {
 
 type Hours = Record<string, number>;
 
+const TAG: Partial<Record<Code["typ"], string>> = { franvaro: "Frånvaro", flexuttag: "Flexuttag" };
 const CONFIDENCE = { hog: "Säkert", medel: "Troligt", lag: "Osäkert" } as const;
 const SOURCE = { kalender: ["▦", "Möte"], "mail-skickat": ["↗", "Skickat"], "mail-mottaget": ["↙", "Mottaget"] } as const;
 
 const key = (kod: string, day: string) => `${kod}|${day}`;
-const fmt = (h: number) => (h === 0 ? "–" : String(h).replace(".", ","));
 const dayLabel = (d: string, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("sv-SE", { ...opts, timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`));
-
-/** Godkända veckor sparas tills vidare bara i webbläsaren. */
-const storageKey = (week: string) => `tidrapport:${week}`;
-function loadSaved(week: string): { hours: Hours; approved: boolean } | null {
-  try {
-    const raw = localStorage.getItem(storageKey(week));
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-function save(week: string, hours: Hours, approved: boolean) {
-  try {
-    localStorage.setItem(storageKey(week), JSON.stringify({ hours, approved }));
-  } catch {
-    // Privat läge eller blockerad lagring: förslaget fungerar ändå, det sparas bara inte.
-  }
-}
 
 export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }: Props) {
   const rowByKey = useMemo(() => {
@@ -66,7 +47,7 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const saved = loadSaved(week);
+    const saved = loadWeek(week);
     if (saved) {
       setHours({ ...original, ...saved.hours });
       setApproved(saved.approved);
@@ -76,20 +57,23 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
   const update = (next: Hours, nextApproved: boolean) => {
     setHours(next);
     setApproved(nextApproved);
-    save(week, next, nextApproved);
+    saveWeek(week, next, nextApproved);
   };
   const setCell = (k: string, v: number) => {
-    const clean = Number.isFinite(v) ? Math.min(24, Math.max(0, Math.round(v * 2) / 2)) : 0;
+    const clean = Number.isFinite(v) ? Math.min(24, Math.max(0, tenth(v))) : 0;
     update({ ...hours, [k]: clean }, false);
   };
 
-  const dayTotal = (d: string) => codes.reduce((s, c) => s + hours[key(c.kod, d)], 0);
-  const codeTotal = (kod: string) => days.reduce((s, d) => s + hours[key(kod, d)], 0);
-  const weekTotal = days.reduce((s, d) => s + dayTotal(d), 0);
+  const dayTotal = (d: string) => tenth(codes.reduce((s, c) => s + hours[key(c.kod, d)], 0));
+  const codeTotal = (kod: string) => tenth(days.reduce((s, d) => s + hours[key(kod, d)], 0));
+  const weekTotal = tenth(days.reduce((s, d) => s + dayTotal(d), 0));
   const billable = codes.filter((c) => c.debiterbar).reduce((s, c) => s + codeTotal(c.kod), 0);
   const unsure = suggestion.rader.filter((r) => r.sakerhet === "lag").length;
-  const offDays = days.filter((d) => dayTotal(d) !== hoursPerDay).length;
-  const target = hoursPerDay * days.length;
+  // Flexuttag räknas inte mot arbetstiden, så det som avviker från målet blir dagens flex.
+  const dayFlex = (d: string) =>
+    tenth(codes.filter((c) => c.typ !== "flexuttag").reduce((s, c) => s + hours[key(c.kod, d)], 0) - hoursPerDay);
+  const weekFlex = tenth(days.reduce((s, d) => s + dayFlex(d), 0));
+  const target = tenth(hoursPerDay * days.length);
 
   const csv = [
     "datum;kod;timmar",
@@ -116,11 +100,15 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
   return (
     <>
       <div className="summary">
-        <div className={`stat ${weekTotal !== target ? "warn" : ""}`}>
+        <div className="stat">
           <b>
-            {fmt(weekTotal)} / {target} h
+            {fmt(weekTotal)} / {fmt(target)} h
           </b>
           <span>Rapporterat</span>
+        </div>
+        <div className={`stat ${flexClass(weekFlex)}`}>
+          <b>{fmtFlex(weekFlex)} h</b>
+          <span>Flex den här veckan</span>
         </div>
         <div className="stat">
           <b>{fmt(billable)} h</b>
@@ -129,10 +117,6 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
         <div className={`stat ${unsure ? "warn" : ""}`}>
           <b>{unsure}</b>
           <span>Osäkra rader att kontrollera</span>
-        </div>
-        <div className={`stat ${offDays ? "warn" : ""}`}>
-          <b>{offDays}</b>
-          <span>Dagar som inte går ihop</span>
         </div>
       </div>
 
@@ -164,7 +148,7 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
                   <th className="code" scope="row">
                     <b>
                       {c.kod}
-                      <span className={`tag ${c.debiterbar ? "" : "int"}`}>{c.debiterbar ? "Debiterbar" : "Intern"}</span>
+                      <span className={`tag ${c.debiterbar ? "" : "int"}`}>{TAG[c.typ] ?? (c.debiterbar ? "Debiterbar" : "Intern")}</span>
                     </b>
                     <span>{c.namn}</span>
                   </th>
@@ -202,13 +186,20 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
             </tbody>
             <tfoot>
               <tr>
-                <td className="label">Per dag, mål {hoursPerDay} h</td>
+                <td className="label">Per dag, mål {fmt(hoursPerDay)} h</td>
                 {days.map((d) => (
-                  <td key={d} className={dayTotal(d) !== hoursPerDay ? "off" : ""}>
-                    {fmt(dayTotal(d))}
-                  </td>
+                  <td key={d}>{fmt(dayTotal(d))}</td>
                 ))}
                 <td>{fmt(weekTotal)}</td>
+              </tr>
+              <tr className="flexrow">
+                <td className="label">Flex</td>
+                {days.map((d) => (
+                  <td key={d} className={flexClass(dayFlex(d))}>
+                    {fmtFlex(dayFlex(d))}
+                  </td>
+                ))}
+                <td className={flexClass(weekFlex)}>{fmtFlex(weekFlex)}</td>
               </tr>
             </tfoot>
           </table>
@@ -299,7 +290,11 @@ export default function WeekGrid({ week, days, codes, hoursPerDay, suggestion }:
         <button className="btn primary" type="button" disabled={approved} onClick={() => update(hours, true)}>
           {approved ? "Godkänd" : "Godkänn veckan"}
         </button>
-        {approved && <span className="approved">✓ Godkänd. Klar att föra över till xLedger.</span>}
+        {approved && (
+          <span className="approved">
+            ✓ Godkänd och inräknad i <Link href="/flex">flexsaldot</Link>. Klar att föra över till xLedger.
+          </span>
+        )}
       </div>
 
       {approved && (

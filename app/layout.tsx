@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth, microsoftConfigured, signIn, signOut } from "../auth";
+import NavLinks from "./NavLinks";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,9 +24,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <div className="wrap">
           <div className="topbar">
-            <Link href="/" className="brand">
-              Tidrapportering
-            </Link>
+            <div className="topnav">
+              <Link href="/" className="brand">
+                Tidrapportering
+              </Link>
+              {session?.user && <NavLinks />}
+            </div>
             <div className="user">
               {session?.user ? (
                 <>
